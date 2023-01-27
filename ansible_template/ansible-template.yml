@@ -1,0 +1,87 @@
+---
+- hosts: Change-to-hostgroup-name
+
+  vars:
+    company_site:
+      - {companyname: "Totsuki Academy", apache_dir: "totsuki_academy", filename: "totsuki_academy", companyid: 1}
+      - {companyname: "UA High School", apache_dir: "ua_high_school", filename: "ua_highschool", companyid: 2}
+      - {companyname: "Wayne Enterprises", apache_dir: "wayne_enterprises", filename: "wayne_enterprises", companyid: 3}
+
+  tasks:
+
+  #1 Install Apache service (httpd)
+  - name: Install Apache
+    yum:
+      name:
+        - epel-release
+        - httpd
+      state: latest
+
+  #2 Create directories for each company
+  - name: Create directories for each company
+    file:
+      path: /var/www/{{ item.apache_dir }}/html
+      state: directory
+      owner: apache
+      group: apache
+      mode: 0755
+    loop: "{{ company_site }}"
+
+  #3 Create an index.html page with the company name using the Jinja2 template file
+  - name: Create index.html file
+    template:
+      src: htmltemplate2.html.j2
+      dest: /var/www/{{ item.apache_dir }}/html/index.html
+      owner: apache
+      group: apache
+      mode: 0755
+    loop: "{{ company_site }}"
+
+  #4 Deploy the "httpd.conf" file using the template module
+  - name: Deploy httpd.conf
+    template:
+      src: httpd.conf
+      dest: /etc/httpd/conf/
+      owner: apache
+      group: apache
+      mode: 0755
+
+  #5 In the "/etc/httpd/" directory, create directories named "sites-enabled" and "sites-available"
+  - name: Create sites-enabled and sites-available directories
+    file:
+      path: /etc/httpd/{{ item }}
+      owner: apache
+      group: apache
+      mode: 0755
+      recurse: yes
+      state: directory
+    with_items: ["sites-available", "sites-enabled"]
+
+  #6 Deploy the "apachetemplate.conf" file using the template module
+  - name: Deploy apachetemplate.conf
+    template:
+      src: apachetemplate.conf
+      dest: /etc/httpd/sites-available/
+      owner: apache
+      group: apache
+      mode: 0755
+
+  #7 Create a symbolic link between the sites-available/apachetemplate.conf to sites-enabled/apachetemplate.conf
+  - name: Create symbolic link
+    file:
+      src: /etc/httpd/sites-available/apachetemplate.conf
+      dest: /etc/httpd/sites-enabled/apachetemplate.conf
+      state: link
+
+  #8 Restart the Apache service
+  - name: Restart Apache
+    service:
+      name: httpd
+      state: restarted
+
+  #9 Disable the CentOS firewalls
+  - name: Disable firewall
+    service:
+      name: firewalld
+      state: stopped
+      enabled: no

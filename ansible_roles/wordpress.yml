@@ -1,0 +1,21 @@
+---
+# WordPress
+# Notice how there are no “hosts:” or “tasks:” lines. Those lines should not be in the main.yml files in an Ansible role.
+# This script is just a suggested starting point for your WordPress script
+# Do not use this script as the complete script; use it to help you start your WordPress script
+
+- name: Download WordPress
+  get_url:
+
+- name: Unzip WordPress
+  unarchive:
+  extra_opts: [--strip-components=1]
+
+- name: Change Owner and Group of WordPress files
+  file:
+    path: /var/www/html/
+    state: directory
+    mode: 0775
+    recurse: yes
+    owner: apache
+    group: apache

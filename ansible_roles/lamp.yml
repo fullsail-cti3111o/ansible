@@ -1,0 +1,61 @@
+---
+# As part of this activity, you're given this incomplete script. The following will need to be added:
+# - Finish the PHP7 installation
+# - Disable firewall
+
+# Initial Installations (complete this task)
+- name: Install LAMP dependencies
+  yum:
+    name:
+      - epel-release
+      - httpd
+      - mariadb-server
+      - tar
+      - curl
+      - python3
+    state: latest
+
+# Install MySQL dependencies
+- name: Install MySQL dependencies
+  yum:
+    name: python3-mysql
+    state: latest
+
+# New GPG Key for PHP Installation
+- name: Set GPG RPM Key
+  rpm_key:
+    key: https://rpms.remirepo.net/RPM-GPG-KEY-remi2018
+    state: present
+
+#PHP Install (complete this task)
+- name: Install Remi repository
+
+- name: Enable remi repo
+  shell: yum module reset php && yum module enable php:remi-7.3 -y
+
+# Apache Service
+- name: Apache Start and Enabled it on Boot
+  service:
+    name: httpd
+    state: started
+    enabled: yes
+
+# Database Service
+- name: MariaDB Start and Enable it on Boot
+  service:
+    name: mariadb
+    state: started
+    enabled: yes
+
+# Create Databases
+- name: MariaDB Create Database
+  mysql_db:
+    name: wordpressdb
+    state: present
+
+- name: WordPress User Database
+  mysql_user:
+    login_user: root
+    name: wordpressuser
+    password: Fullsail1!
+    priv: '*.*:ALL'
